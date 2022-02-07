@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.job4j.model.Item;
+import ru.job4j.model.User;
 import ru.job4j.store.HibernateStore;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -41,7 +42,9 @@ public class ItemServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
         try {
             Item item = objectMapper.readValue(req.getReader().readLine(), Item.class);
-            Item itemInDb = HibernateStore.instanceOf().createItem(item.getDescription());
+            User user = (User) req.getSession().getAttribute("user");
+            item.setUser(user);
+            Item itemInDb = HibernateStore.instanceOf().createItem(item);
             String json = objectMapper.writeValueAsString(itemInDb);
             resp.setContentType("application/json; charset=utf-8");
             resp.getWriter().write(json);

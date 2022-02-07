@@ -9,6 +9,8 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.job4j.model.Item;
+import ru.job4j.model.User;
+import org.hibernate.query.*;
 import java.util.List;
 import java.util.function.Function;
 
@@ -49,9 +51,7 @@ public class HibernateStore implements Store, AutoCloseable {
     }
 
     @Override
-    public Item createItem(String description) {
-        Item item = new Item();
-        item.setDescription(description);
+    public Item createItem(Item item) {
         this.tx(session -> session.save(item));
         return item;
     }
@@ -65,6 +65,23 @@ public class HibernateStore implements Store, AutoCloseable {
         });
     }
 
+    @Override
+    public User createUser(User user) {
+        return this.tx(session -> {
+            session.save(user);
+            return user;
+        });
+    }
+
+    @Override
+    public User findUserByEmail(String email) {
+        return (User) this.tx(session -> {
+            String hql = "FROM ru.job4j.model.User WHERE email = :email";
+            Query query = session.createQuery(hql);
+            query.setParameter("email", email);
+            return query.uniqueResult();
+        });
+    }
 
     private <T> T tx(final Function<Session, T> command) {
         final Session session = sessionFactory.openSession();

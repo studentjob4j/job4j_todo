@@ -26,6 +26,7 @@ const setFormSubmittable = () => {
                                 </span>
                             </div>
                             <span>${item.description}</span>
+                             <span class="todo-item-author">автор: ${item.user.name}</span>
                         </div>
                        </div>
                    `);
@@ -56,6 +57,7 @@ const loadItems = () => {
                                 </span>
                             </div>
                             <span>${item.description}</span>
+                            <span class="todo-item-author">автор: ${item.user.name}</span>
                         </div>
                        </div>
                    `);
@@ -111,5 +113,16 @@ const setNavigation = () => {
         list.addClass('only-complete');
         $('.todo-nav li.active').removeClass('active');
         $(this).addClass('active');
+    });
+}
+
+const logout = () => {
+    $.ajax({
+        type: 'GET',
+        url: `${window.location.origin}/job4j_todolist_war_exploded/logout`
+    }).done(data => {
+        window.location.href = `${window.location.origin}/job4j_todolist_war_exploded/login`;
+    }).fail(err => {
+        console.log(err);
     });
 }
