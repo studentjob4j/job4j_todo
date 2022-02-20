@@ -3,6 +3,8 @@ package ru.job4j.model;
 import org.hibernate.annotations.CreationTimestamp;
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Shegai Evgenii
@@ -30,12 +32,31 @@ public class Item {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(name = "item_category")
+    private Set<Category> categories;
+
     public Item() {
     }
 
     public Item(String description, User user) {
         this.description = description;
         this.user = user;
+    }
+
+    public Set<Category> getCategory() {
+        return categories;
+    }
+
+    public void setCategory(Set<Category> category) {
+        this.categories = category;
+    }
+
+    public void addCategory(Category category) {
+        if (categories == null) {
+            categories = new HashSet<>();
+        }
+        categories.add(category);
     }
 
     public Integer getId() {

@@ -8,6 +8,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.job4j.model.Category;
 import ru.job4j.model.Item;
 import ru.job4j.model.User;
 import org.hibernate.query.*;
@@ -47,22 +48,43 @@ public class HibernateStore implements Store, AutoCloseable {
 
     @Override
     public List<Item> findAllItems() {
-        return this.tx(session -> session.createQuery("from ru.job4j.model.Item").getResultList());
+        return this.tx(session ->   session.createQuery("SELECT DISTINCT item FROM Item item "
+                + "JOIN FETCH item.categories ORDER BY item.created DESC").list());
     }
 
-    @Override
-    public Item createItem(Item item) {
-        this.tx(session -> session.save(item));
+    public Item createItem(Item item, List<Integer> categoryIds) {
+        int id = (int) this.tx(session -> {
+            for (Integer categoryId : categoryIds) {
+                Category category = session.get(Category.class, categoryId);
+                item.addCategory(category);
+            }
+            return session.save(item);
+        });
+        item.setId(id);
         return item;
     }
 
     @Override
     public Item updateItem(int id) {
-        return this.tx(session -> {
-           Item item = session.get(Item.class, id);
-           item.setDone(!item.isDone());
-           return item;
+        Item item = tx(session -> {
+            Query<Item> query = session.createQuery("FROM Item item JOIN FETCH item.categories WHERE item.id = :id");
+            query.setParameter("id", id);
+            return query.uniqueResult();
         });
+        if (item == null) {
+            throw new IllegalStateException("Could not find a record in DB");
+        }
+        item.setDone(!item.isDone());
+        tx(session -> {
+            Query query = session.createQuery(
+                    "UPDATE Item item SET " + "done = :done " + "WHERE id = :id"
+            );
+            query.setParameter("id", item.getId());
+            query.setParameter("done", item.isDone());
+            return query.executeUpdate() > 0;
+        });
+        return item;
+
     }
 
     @Override
@@ -81,6 +103,12 @@ public class HibernateStore implements Store, AutoCloseable {
             query.setParameter("email", email);
             return query.uniqueResult();
         });
+    }
+
+    @Override
+    public List<Category> findAllCategories() {
+        return this.tx(session ->
+                session.createQuery("from Category category order by category.name asc").list());
     }
 
     private <T> T tx(final Function<Session, T> command) {

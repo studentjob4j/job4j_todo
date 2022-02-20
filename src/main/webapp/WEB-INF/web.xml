@@ -34,6 +34,16 @@
     <servlet-class>ru.job4j.servlet.LogOutServlet</servlet-class>
   </servlet>
 
+  <servlet>
+    <servlet-name>CategoryServlet</servlet-name>
+    <servlet-class>ru.job4j.servlet.CategoryServlet</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>CategoryServlet</servlet-name>
+    <url-pattern>/categories</url-pattern>
+  </servlet-mapping>
+
   <servlet-mapping>
     <servlet-name>ItemServlet</servlet-name>
     <url-pattern>/items</url-pattern>
